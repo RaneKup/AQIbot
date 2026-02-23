@@ -6,11 +6,11 @@ from aiogram.filters.command import Command
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token="8584423006:AAETYSE_Rpng8TEqKp7rIwjvnhWHtHMAif8")
+bot = Bot(token="token_bot")
 dp = Dispatcher()
 
 def get_kemerovo_air_owm():
-    api_key = "ce05754746ed917ae04cf1d9604abd56"
+    api_key = "API_openweathe"
     lat = 55.33
     lon = 86.08
     url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={api_key}"
@@ -76,5 +76,6 @@ async def aqi_handler(message: types.Message):
 
 async def main():
     await dp.start_polling(bot)
+
 
 asyncio.run(main())
