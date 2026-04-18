@@ -5,18 +5,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Используем актуальную версию, чтобы минимизировать варнинги
       - uses: actions/checkout@v4
 
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          command: buildozer android debug
+          # "yes |" заставляет билд отвечать "да" на все вопросы о лицензиях
+          command: yes | buildozer android debug
           buildozer_version: master
 
       - name: Upload APK
-        # Проверяем, что файл существует перед загрузкой
-        if: steps.buildozer.outputs.filename != ''
+        if: success() # Запускать только если сборка прошла успешно
         uses: actions/upload-artifact@v4
         with:
           name: package
