@@ -9,7 +9,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token="8248324489:AAEsb5wWvewYTTUc-nH2r1dJ-sVoz2HAhMw")
+bot = Bot(token="")
 dp = Dispatcher()
 
 
@@ -72,7 +72,7 @@ async def AQI(message: types.Message):
         except Exception as e:
             print(f"💥 Ошибка соединения: {e}")
 
-    MY_OWM_KEY = "ce05754746ed917ae04cf1d9604abd56"
+    MY_OWM_KEY = ""
     get_kemerovo_air_owm(MY_OWM_KEY)
     await message.answer(f'{get_kemerovo_air_owm(MY_OWM_KEY)}')
 
