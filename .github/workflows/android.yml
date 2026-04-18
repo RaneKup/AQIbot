@@ -3,22 +3,29 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Фиксируем старую стабильную версию ОС
     steps:
-      # Используем актуальную версию, чтобы минимизировать варнинги
       - uses: actions/checkout@v4
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          # "yes |" заставляет билд отвечать "да" на все вопросы о лицензиях
-          command: yes | buildozer android debug
-          buildozer_version: master
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip build-essential git python3 python3-dev \
+          ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+          libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev \
+          libgstreamer1.0-gstreamer-lite1.0-dev libgstreamer-plugins-base1.0-dev \
+          zip unzip autoconf autotools-dev libtool pkg-config libncurses5-dev \
+          libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev automake
+          pip3 install --user --upgrade buildozer Cython==0.29.33 virtualenv
 
+      - name: Build with Buildozer
+        run: |
+          export PATH=$PATH:$HOME/.local/bin
+          # Принудительно соглашаемся на лицензии и запускаем сборку
+          yes | buildozer android debug
+          
       - name: Upload APK
-        if: success() # Запускать только если сборка прошла успешно
         uses: actions/upload-artifact@v4
         with:
           name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk # Ищем APK напрямую в папке bin
