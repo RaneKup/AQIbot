@@ -16,7 +16,8 @@ from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Ellipse
 from kivy.metrics import dp
 from kivy.animation import Animation
-from main_app import get_forecast
+
+
 
 DB_FILE = "users.json"
 SESSION_FILE = "session.json"
@@ -24,14 +25,30 @@ SESSION_FILE = "session.json"
 DB_URL = "https://air-bd-e3d6b-default-rtdb.firebaseio.com/"
 
 recent_data = np.array([
-    [12.5, 1, 8, 13.5], [11.8, 1, 8, 13.4], [12.4, 17.5, 8, 14.3],
-    [12.8, 1, 8, 13.2], [13.2, 1, 8, 13.1], [11.5, 16.5, 9, 11.0],
-    [13.2, 1, 9, 13.1], [14.6, 1, 8, 22.5], [21.4, 17.5, 8, 21.1],
-    [51.1, 1, 7, 23.8], [24.8, 2, 6, 33.2], [21.5, 22.8, 6, 32.5],
-    [23.2, 2, 5, 33.8], [11.8, 2, 5, 41.0], [11.5, 2.3, 4, 43.2],
-    [12.4, 2, 5, 33.9], [62.2, 2, 6, 31.5], [51.8, 21.9, 6, 22.8],
-    [13.5, 2, 7, 21.2], [123.1, 1, 7, 11.8], [11.4, 19.1, 8, 13.6],
-    [12.2, 1, 4, 12.5], [13.1, 1, 8, 12.4], [21.0, 18.23, 8, 11.3]
+[14.2, 1.2, 8.1, 13.5],
+[13.8, 1.1, 8.0, 13.4],
+[13.4, 2.5, 7.8, 13.8],
+[12.8, 1.3, 7.5, 13.2],
+[12.5, 1.1, 7.6, 13.1],
+[13.1, 3.2, 8.2, 12.8],
+[15.4, 2.4, 9.1, 14.5],
+[18.6, 4.1, 9.5, 18.2],
+[22.4, 5.8, 8.8, 22.1],
+[24.1, 6.2, 7.5, 23.8],
+[22.8, 4.5, 6.4, 24.2],
+[21.5, 5.1, 6.1, 23.5],
+[20.2, 4.2, 5.8, 22.8],
+[18.8, 3.8, 5.5, 21.0],
+[17.5, 3.2, 5.2, 20.2],
+[18.4, 3.5, 5.8, 21.5],
+[21.2, 4.8, 6.5, 22.5],
+[24.8, 6.1, 7.2, 23.8],
+[26.5, 7.4, 8.1, 21.2],
+[28.1, 8.2, 8.5, 19.8],
+[25.4, 6.5, 8.2, 17.6],
+[21.2, 4.1, 7.8, 15.5],
+[18.1, 2.5, 8.1, 14.4],
+[16.0, 1.8, 8.0, 13.3]
 ])
 
 def load_users():
@@ -70,7 +87,7 @@ class AirModel(nn.Module):
         return self.fc(hn[-1])
 
 
-def forecast(input_data, model_path='kemerovo_model.pth'):
+def get_forecast(input_data, model_path='kemerovo_model.pth'):
     checkpoint = torch.load(model_path, weights_only=False, map_location=torch.device('cpu'))
     scaler = checkpoint['scaler']
 
@@ -174,13 +191,13 @@ class LoginScreen(Screen):
         if self.login_i.text in users and users[self.login_i.text] == self.pass_i.text:
             username = self.login_i.text
             App.get_running_app().current_user = username
-            save_session(username)  # <-- Сохраняем сессию
+            save_session(username)
             self.manager.current = 'main'
 
 class RegisterScreen(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
-        layout = BoxLayout(orientation='vertical', padding=dp(40), spacing=dp(15), pos_hint={'center_y': 0.5})
+        layout = BoxLayout(orientation='vertical', padding=dp(40), spacing=dp(15), pos_hint={'center_y': 0.82})
         self.u_i = TextInput(hint_text='Логин', size_hint_y=None, height=dp(50))
         self.p_i = TextInput(hint_text='Пароль', password=True, size_hint_y=None, height=dp(50))
         btn = Button(text="ЗАРЕГИСТРИРОВАТЬСЯ", size_hint_y=None, height=dp(50))
