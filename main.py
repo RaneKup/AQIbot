@@ -4,6 +4,8 @@ import requests
 import torch
 import torch.nn as nn
 import numpy as np
+import hashlib
+import time
 from kivy.app import App
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
@@ -17,7 +19,21 @@ from kivy.graphics import Color, RoundedRectangle, Ellipse
 from kivy.metrics import dp
 from kivy.animation import Animation
 
+def hash_password(password, salt=None):
+    if salt is None:
+        salt = os.urandom(16).hex()
+    hash_obj = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode('utf-8'),
+        salt.encode('utf-8'),
+        100000
+    )
+    return f"{salt}${hash_obj.hex()}"
 
+def check_password(stored_password, provided_password):
+    salt, stored_hash = stored_password.split('$')
+    new_hash = hash_password(provided_password, salt)
+    return new_hash == stored_password
 
 DB_FILE = "users.json"
 SESSION_FILE = "session.json"
@@ -69,7 +85,8 @@ def save_user(username, password):
         return False
 
     try:
-        data = {username: password}
+        hashed_pass = hash_password(password)
+        data = {username: hashed_pass}
         response = requests.patch(f"{DB_URL}users.json", json=data, timeout=5)
         return response.status_code == 200
     except Exception as e:
@@ -88,7 +105,15 @@ class AirModel(nn.Module):
 
 
 def get_forecast(input_data, model_path='kemerovo_model.pth'):
-    checkpoint = torch.load(model_path, weights_only=False, map_location=torch.device('cpu'))
+    try:
+        checkpoint = torch.load(
+            model_path,
+            weights_only=False,
+            map_location=torch.device('cpu')
+        )
+    except Exception as e:
+        print(f"Критическая ошибка: Файл модели поврежден или подделан! {e}")
+        return None
     scaler = checkpoint['scaler']
 
     model = AirModel()
@@ -168,6 +193,13 @@ class ProfileScreen(Screen):
 
 
 class LoginScreen(Screen):
+    last_attempt_time = 0
+
+    def check_att(self, *args):
+        if time.time() - self.last_attempt_time < 2:
+            self.msg.text = "Слишком много попыток. Подождите."
+            return
+        self.last_attempt_time = time.time()
     def __init__(self, **kw):
         super().__init__(**kw)
         layout = BoxLayout(orientation='vertical', padding=dp(40), spacing=dp(15), pos_hint={'center_y': 0.5})
@@ -188,7 +220,7 @@ class LoginScreen(Screen):
 
     def check_auth(self, *args):
         users = load_users()
-        if self.login_i.text in users and users[self.login_i.text] == self.pass_i.text:
+        if check_password(users[self.login_i.text], self.pass_i.text):
             username = self.login_i.text
             App.get_running_app().current_user = username
             save_session(username)
@@ -211,8 +243,6 @@ class RegisterScreen(Screen):
     def save_auth(self, *args):
         if save_user(self.u_i.text, self.p_i.text):
             self.manager.current = 'login_screen'
-
-
 
 class MainScreen(Screen):
     def __init__(self, **kw):
@@ -243,8 +273,15 @@ class ScrollScreen(Screen):
         s = ScrollView()
         l = BoxLayout(orientation='vertical', size_hint_y=None, padding=[0, dp(80), 0, dp(20)], spacing=dp(10))
         l.bind(minimum_height=l.setter('height'))
-        for i in range(20):
-            l.add_widget(TextCard(text=f"Карточка новости {i + 1}"))
+        l.add_widget(TextCard(text=f"В начале 2026 года в Кузбассе сохраняется сложная экологическая ситуация:\n"
+                                   f" Кемерово и Новокузнецк регулярно возглавляют\n"
+                                   f" рейтинги городов России с самым загрязненным воздухом"))
+        l.add_widget(TextCard(text=f"В регионе тестируют использование «мох-биосенсоров» для\n"
+                                   f" мониторинга загрязнения воздуха"))
+        l.add_widget(TextCard(text=f"Синоптики и Роспотребнадзор часто фиксируют превышения\n"
+                                   f" загрязняющих веществ, таких как оксид азота"))
+        l.add_widget(TextCard(text=f"Карточка новости "))
+        l.add_widget(TextCard(text=f"Карточка новости "))
         s.add_widget(l)
         self.add_widget(s)
 
